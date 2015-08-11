@@ -51,6 +51,10 @@ public final class MultiRealm
     
     // MARK: Initializers
     
+    public convenience init(queueType: QueueType) {
+        self.init(path: Realm.defaultPath, readOnly: false, encryptionKey: nil, inMemoryIdentifier: nil, queueType: queueType)
+    }
+    
     /**
     Obtains a Realm instance persisted at the specified file path. Defaults to
     `Realm.defaultPath`
