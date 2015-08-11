@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "76AFEFB97C36DCA51B9F37CE"
+               BlueprintIdentifier = "213FC578B3ABCA6531636EC0"
                BuildableName = "MultiRealm.framework"
                BlueprintName = "MultiRealm"
                ReferencedContainer = "container:Pods.xcodeproj">
