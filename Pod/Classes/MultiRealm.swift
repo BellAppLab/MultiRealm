@@ -1,6 +1,7 @@
 import RealmSwift
 
 
+//MARK: - Handling background tasks in iOS
 #if os(iOS)
     typealias BackgroundTaskId = UIBackgroundTaskIdentifier
     
@@ -36,7 +37,11 @@ import RealmSwift
 #endif
 
 
-public typealias MultiRealmBlock = ()->()
+//MARK: - Defines
+public enum QueueType
+{
+    case Main, Background
+}
 
 
 public final class MultiRealm
@@ -53,8 +58,8 @@ public final class MultiRealm
     :param: path Path to the realm file.
     :param: inBackground: Determines if the Realm should be created on a background thread
     */
-    public convenience init(path: String = Realm.defaultPath, inBackground background: Bool) {
-        self.init(path: path, readOnly: false, encryptionKey: nil, inBackground: background)
+    public convenience init(path: String = Realm.defaultPath, queueType: QueueType) {
+        self.init(path: path, readOnly: false, encryptionKey: nil, inMemoryIdentifier: nil, queueType: queueType)
     }
     
     /**
@@ -77,9 +82,35 @@ public final class MultiRealm
     that describes the problem. If you are not interested in
     possible errors, omit the argument, or pass in `nil`.
     */
-    public init(path: String, readOnly: Bool, encryptionKey: NSData? = nil, inBackground background: Bool) {
-        if !background {
-            assert(NSThread.currentThread() == NSThread.mainThread(), "Calls to init with 'inBackground = false' must be made from the main thread")
+    public convenience init(path: String, readOnly: Bool, encryptionKey: NSData? = nil, queueType: QueueType) {
+        self.init(path: path, readOnly: readOnly, encryptionKey: encryptionKey, inMemoryIdentifier: nil, queueType: queueType)
+    }
+    
+    /**
+    Obtains a Realm instance for an un-persisted in-memory Realm. The identifier
+    used to create this instance can be used to access the same in-memory Realm from
+    multiple threads.
+    
+    Because in-memory Realms are not persisted, you must be sure to hold on to a
+    reference to the `Realm` object returned from this for as long as you want
+    the data to last. Realm's internal cache of `Realm`s will not keep the
+    in-memory Realm alive across cycles of the run loop, so without a strong
+    reference to the `Realm` a new Realm will be created each time. Note that
+    `Object`s, `List`s, and `Results` that refer to objects persisted in a Realm have a
+    strong reference to the relevant `Realm`, as do `NotifcationToken`s.
+    
+    :param: identifier A string used to identify a particular in-memory Realm.
+    */
+    public convenience init(inMemoryIdentifier: String, queueType: QueueType) {
+        self.init(path: nil, readOnly: nil, encryptionKey: nil, inMemoryIdentifier: nil, queueType: queueType)
+    }
+    
+    public convenience init(realm: Realm, encryptionKey: NSData?, queueType: QueueType) {
+        self.init(path: realm.path, readOnly: realm.readOnly, encryptionKey: encryptionKey, inMemoryIdentifier: nil, queueType: queueType)
+    }
+    
+    private init(path: String?, readOnly: Bool?, encryptionKey: NSData? = nil, inMemoryIdentifier: String? = nil, queueType: QueueType) {
+        if queueType == .Main {
             self.queue = NSOperationQueue.mainQueue()
         } else {
             self.queue = NSOperationQueue()
@@ -87,16 +118,20 @@ public final class MultiRealm
             self.queue.name = "MultiRealmQueue"
         }
         self.performBlock { [unowned self] () -> () in
-            var error = NSErrorPointer()
-            if let realm = Realm(path: path, readOnly: readOnly, encryptionKey: encryptionKey, error: error) {
-                self.realm = realm
+            if var identifier = inMemoryIdentifier {
+                self.realm = Realm(inMemoryIdentifier: identifier)
             } else {
-                NSException(name: NSInternalInconsistencyException, reason: error.debugDescription, userInfo: nil).raise()
+                var error = NSErrorPointer()
+                if let realm = Realm(path: path!, readOnly: readOnly!, encryptionKey: encryptionKey, error: error) {
+                    self.realm = realm
+                } else {
+                    NSException(name: NSInternalInconsistencyException, reason: error.debugDescription, userInfo: nil).raise()
+                }
             }
         }
     }
     
-    public func performBlock(block: MultiRealmBlock)
+    public func performBlock(block: () -> Void)
     {
         var bgTaskId = startBackgroundTask()
         let finalBlock = { ()->() in
@@ -111,7 +146,7 @@ public final class MultiRealm
 
 public extension Object
 {
-    public func save(inMultiRealm multiRealm: MultiRealm, withBlock block: MultiRealmBlock?)
+    public func save(inMultiRealm multiRealm: MultiRealm, withBlock block: (() -> Void)?)
     {
         
         multiRealm.performBlock { [unowned self] () -> () in
@@ -122,7 +157,7 @@ public extension Object
         }
     }
     
-    public class func saveAll<T: Object>(objects: Results<T>, inMultiRealm multiRealm: MultiRealm, withBlock block: MultiRealmBlock?)
+    public class func saveAll<T: Object>(objects: Results<T>, inMultiRealm multiRealm: MultiRealm, withBlock block: (() -> Void)?)
     {
         multiRealm.performBlock { () -> () in
             multiRealm.realm.write { () -> Void in
@@ -132,7 +167,7 @@ public extension Object
         }
     }
     
-    public func remove(fromMultiRealm multiRealm: MultiRealm, withBlock block: MultiRealmBlock?)
+    public func remove(fromMultiRealm multiRealm: MultiRealm, withBlock block: (() -> Void)?)
     {
         multiRealm.performBlock { [unowned self] () -> () in
             multiRealm.realm.write { [unowned self] () -> Void in
@@ -142,7 +177,7 @@ public extension Object
         }
     }
     
-    public class func removeAll<T: Object>(objects: Results<T>, fromMultiRealm multiRealm: MultiRealm, withBlock block: MultiRealmBlock?)
+    public class func removeAll<T: Object>(objects: Results<T>, fromMultiRealm multiRealm: MultiRealm, withBlock block: (() -> Void)?)
     {
         multiRealm.performBlock { () -> () in
             multiRealm.realm.write { () -> Void in
