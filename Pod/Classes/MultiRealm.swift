@@ -48,6 +48,9 @@ public final class MultiRealm
 {
     public var realm: Realm!
     private let queue: NSOperationQueue
+    public func internalQueue() -> NSOperationQueue {
+        return self.queue
+    }
     
     // MARK: Initializers
     
