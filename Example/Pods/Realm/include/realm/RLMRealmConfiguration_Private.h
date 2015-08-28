@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////
 //
-// Copyright 2014 Realm Inc.
+// Copyright 2015 Realm Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,21 +16,22 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
-#import "RLMListBase.h"
-#import <Realm/RLMArray.h>
+#import <Realm/RLMRealmConfiguration.h>
 
-@implementation RLMListBase
+@class RLMSchema;
 
-- (instancetype)initWithArray:(RLMArray *)array {
-    self = [super init];
-    if (self) {
-        __rlmArray = array;
-    }
-    return self;
-}
+@interface RLMRealmConfiguration ()
 
-- (NSUInteger)countByEnumeratingWithState:(NSFastEnumerationState *)state objects:(id __unsafe_unretained [])buffer count:(NSUInteger)len {
-    return [__rlmArray countByEnumeratingWithState:state objects:buffer count:len];
-}
+@property (nonatomic, readwrite) bool dynamic;
+
+@property (nonatomic, copy) RLMSchema *customSchema;
+
++ (NSString *)defaultRealmPath;
+
++ (void)setDefaultPath:(NSString *)path;
+
++ (void)resetRealmConfigurationState;
 
 @end
+
+FOUNDATION_EXTERN void RLMRealmConfigurationUsePerPath(SEL methodName);

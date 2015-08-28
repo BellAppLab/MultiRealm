@@ -1,11 +1,11 @@
 PODS:
-  - MultiRealm (0.2.0):
+  - MultiRealm (0.3.2):
     - RealmSwift
-  - Realm (0.94.1):
-    - Realm/Headers (= 0.94.1)
-  - Realm/Headers (0.94.1)
-  - RealmSwift (0.94.1):
-    - Realm (= 0.94.1)
+  - Realm (0.95.0):
+    - Realm/Headers (= 0.95.0)
+  - Realm/Headers (0.95.0)
+  - RealmSwift (0.95.0):
+    - Realm (= 0.95.0)
 
 DEPENDENCIES:
   - MultiRealm (from `../`)
@@ -15,8 +15,8 @@ EXTERNAL SOURCES:
     :path: ../
 
 SPEC CHECKSUMS:
-  MultiRealm: f1c33b744e3efa72c64cec83e72ca53eef1fd94e
-  Realm: d999a6cf0b41577a077349c9cc9d496cc62a7d17
-  RealmSwift: 06b60ff5b1338755654d39aab44ac38001600f76
+  MultiRealm: 312fcc0ba4ad4c38f5bd3c0e8de3af5d5f26d5eb
+  Realm: bbb171b96728ea136ed5cd354dca2a3d6529923c
+  RealmSwift: 35eeb642bf0b43dedfe363451ba3288d0e72ebb9
 
-COCOAPODS: 0.38.2
+COCOAPODS: 0.39.0.beta.3

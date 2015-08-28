@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////
 //
-// Copyright 2014 Realm Inc.
+// Copyright 2015 Realm Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,17 +16,20 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
-#import <Realm/RLMConstants.h>
+#ifdef __OBJC__
+#import <Foundation/Foundation.h>
+#endif
 
-NSString * const RLMRealmRefreshRequiredNotification = @"RLMRealmRefreshRequiredNotification";
-NSString * const RLMRealmDidChangeNotification = @"RLMRealmDidChangeNotification";
+#ifdef __cplusplus
+#import <functional>
+#import <map>
+#import <memory>
+#import <string>
+#import <vector>
 
-NSString * const RLMErrorDomain = @"io.realm";
-
-NSString * const RLMExceptionName = @"RLMException";
-
-NSString * const RLMRealmVersionKey = @"RLMRealmVersion";
-
-NSString * const RLMRealmCoreVersionKey = @"RLMRealmCoreVersion";
-
-NSString * const RLMInvalidatedKey = @"invalidated";
+#import <realm/group.hpp>
+#import <realm/link_view.hpp>
+#import <realm/row.hpp>
+#import <realm/table.hpp>
+#import <realm/table_view.hpp>
+#endif
