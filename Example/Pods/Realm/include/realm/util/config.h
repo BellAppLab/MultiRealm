@@ -32,5 +32,3 @@
 #if 1
 #  define REALM_ENABLE_ASSERTIONS 1
 #endif
-
-#define REALM_NULL_STRINGS 0

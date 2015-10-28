@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		607FACEC1AFB9204008FA782 /* Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACEB1AFB9204008FA782 /* Tests.swift */; };
-		B50A75E4011326AA9B3B4EDD /* Pods_MultiRealm_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2CBD6F93AAFDC7F63CB3AC35 /* Pods_MultiRealm_Tests.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		B50A75E4011326AA9B3B4EDD /* Pods_MultiRealm_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2CBD6F93AAFDC7F63CB3AC35 /* Pods_MultiRealm_Tests.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -127,6 +127,7 @@
 		607FACC81AFB9204008FA782 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastSwiftUpdateCheck = 0710;
 				LastUpgradeCheck = 0630;
 				ORGANIZATIONNAME = CocoaPods;
 				TargetAttributes = {

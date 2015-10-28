@@ -136,8 +136,7 @@ static void RLMValidateMatchingObjectType(RLMArray *array, RLMObject *object) {
         @throw RLMException(@"Object must not be nil");
     }
     if (![array->_objectClassName isEqualToString:object->_objectSchema.className]) {
-        NSString *message = [NSString stringWithFormat:@"Object type '%@' does not match RLMArray type '%@'.", object->_objectSchema.className, array->_objectClassName];
-        @throw RLMException(message);
+        @throw RLMException(@"Object type '%@' does not match RLMArray type '%@'.", object->_objectSchema.className, array->_objectClassName);
     }
 }
 
@@ -145,8 +144,8 @@ static void RLMValidateArrayBounds(__unsafe_unretained RLMArray *const ar,
                                    NSUInteger index, bool allowOnePastEnd=false) {
     NSUInteger max = ar->_backingArray.count + allowOnePastEnd;
     if (index >= max) {
-        @throw RLMException([NSString stringWithFormat:@"Index %llu is out of bounds (must be less than %llu).",
-                             (unsigned long long)index, (unsigned long long)max]);
+        @throw RLMException(@"Index %llu is out of bounds (must be less than %llu).",
+                            (unsigned long long)index, (unsigned long long)max);
     }
 }
 
@@ -248,14 +247,26 @@ static void RLMValidateArrayBounds(__unsafe_unretained RLMArray *const ar,
     RLMValidateArrayBounds(self, sourceIndex);
     RLMValidateArrayBounds(self, destinationIndex);
     RLMObjectBase *original = _backingArray[sourceIndex];
-    [_backingArray removeObjectAtIndex:sourceIndex];
-    [_backingArray insertObject:original atIndex:destinationIndex];
+
+    auto start = std::min(sourceIndex, destinationIndex);
+    auto len = std::max(sourceIndex, destinationIndex) - start + 1;
+    changeArray(self, NSKeyValueChangeReplacement, {start, len}, ^{
+        [_backingArray removeObjectAtIndex:sourceIndex];
+        [_backingArray insertObject:original atIndex:destinationIndex];
+    });
 }
 
 - (void)exchangeObjectAtIndex:(NSUInteger)index1 withObjectAtIndex:(NSUInteger)index2 {
     RLMValidateArrayBounds(self, index1);
     RLMValidateArrayBounds(self, index2);
-    [_backingArray exchangeObjectAtIndex:index1 withObjectAtIndex:index2];
+
+    changeArray(self, NSKeyValueChangeReplacement, ^{
+        [_backingArray exchangeObjectAtIndex:index1 withObjectAtIndex:index2];
+    }, [=] {
+        NSMutableIndexSet *set = [[NSMutableIndexSet alloc] initWithIndex:index1];
+        [set addIndex:index2];
+        return set;
+    });
 }
 
 - (NSUInteger)indexOfObject:(RLMObject *)object {
