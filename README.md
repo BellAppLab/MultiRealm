@@ -7,9 +7,37 @@
 
 ## Usage
 
+Instead of this:
+
+```swift
+let realm = try! Realm()
+```
+
+**Do this:**
+
+```swift
+let multiRealm = MultiRealm(.Background) {
+    let realm = try! Realm()
+    multiRealm.set(realm)
+}
+```
+
+And then, when you need to perform operations with that Realm:
+
+```swift
+multiRealm.performBlock {
+    //save your objects
+    try! multiRealm.realm.write() { ... }
+}
+```
+
 To run the example project, clone the repo, and run `pod install` from the Example directory first.
 
 ## Requirements
+
+iOS 8+
+OSX 10.10+
+RealmSwift
 
 ## Installation
 

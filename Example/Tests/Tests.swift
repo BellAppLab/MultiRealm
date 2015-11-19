@@ -17,6 +17,11 @@ class Tests: XCTestCase {
     func testExample() {
         // This is an example of a functional test case.
         XCTAssert(true, "Pass")
+        
+        let multiRealm = MultiRealm(.Background) {
+            let realm = try! Realm()
+            multiRealm.set(realm)
+        }
     }
     
     func testPerformanceExample() {

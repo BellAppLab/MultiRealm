@@ -37,29 +37,30 @@ import RealmSwift
 #endif
 
 
-//MARK: - Defines
-public enum QueueType
-{
-    case Main, Background
-    
-    internal var queue: dispatch_queue_t {
-        switch self
-        {
-        case .Main: return dispatch_get_main_queue()
-        case .Background: return dispatch_queue_create("MultiRealmQueue", nil)
-        }
-    }
-}
-
-
 //MARK: - Main
 public struct MultiRealm
 {
-    private(set) var realm: Realm!
-    public let queue: dispatch_queue_t
+    //MARK: Defines
+    public enum Queue
+    {
+        case Main, Background
+        
+        internal var queue: dispatch_queue_t {
+            switch self
+            {
+            case .Main: return dispatch_get_main_queue()
+            case .Background: return dispatch_queue_create("MultiRealmQueue", nil)
+            }
+        }
+    }
     public typealias CreationBlock = () -> Void
     
-    public init(_ queueType: QueueType, _ creationBlock: CreationBlock)
+    //MARK: Variables
+    private(set) var realm: Realm!
+    public let queue: dispatch_queue_t
+    
+    //MARK: Setup
+    public init(_ queueType: Queue, _ creationBlock: CreationBlock)
     {
         self.queue = queueType.queue
         self.performBlock(creationBlock)
@@ -70,6 +71,7 @@ public struct MultiRealm
         self.realm = realm
     }
     
+    //MARK: Processing
     public func performBlock(block: () -> Void)
     {
         let bgTaskId = startBackgroundTask()
