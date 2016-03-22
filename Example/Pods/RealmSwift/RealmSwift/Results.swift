@@ -25,10 +25,11 @@ import Realm
 public protocol MinMaxType {}
 extension Double: MinMaxType {}
 extension Float: MinMaxType {}
+extension Int: MinMaxType {}
+extension Int8: MinMaxType {}
 extension Int16: MinMaxType {}
 extension Int32: MinMaxType {}
 extension Int64: MinMaxType {}
-extension Int: MinMaxType {}
 extension NSDate: MinMaxType {}
 
 // MARK: AddableType
@@ -37,10 +38,11 @@ extension NSDate: MinMaxType {}
 public protocol AddableType {}
 extension Double: AddableType {}
 extension Float: AddableType {}
+extension Int: AddableType {}
+extension Int8: AddableType {}
 extension Int16: AddableType {}
 extension Int32: AddableType {}
 extension Int64: AddableType {}
-extension Int: AddableType {}
 
 /// :nodoc:
 /// Internal class. Do not use directly.
@@ -61,17 +63,36 @@ public class ResultsBase: NSObject, NSFastEnumeration {
 
     // MARK: Fast Enumeration
 
-    public func countByEnumeratingWithState(state: UnsafeMutablePointer<NSFastEnumerationState>, objects buffer: AutoreleasingUnsafeMutablePointer<AnyObject?>, count len: Int) -> Int {
-        return Int(rlmResults.countByEnumeratingWithState(state, objects: buffer, count: UInt(len)))
+    public func countByEnumeratingWithState(state: UnsafeMutablePointer<NSFastEnumerationState>,
+                                            objects buffer: AutoreleasingUnsafeMutablePointer<AnyObject?>,
+                                            count len: Int) -> Int {
+        return Int(rlmResults.countByEnumeratingWithState(state,
+                   objects: buffer,
+                   count: UInt(len)))
     }
 }
 
 /**
-`Results` is an auto-updating container type in Realm returned from object
-queries.
+Results is an auto-updating container type in Realm returned from object queries.
 
-Results can be queried with the same predicates as `List<T>` and you can chain queries to further
-filter query results.
+Results can be queried with the same predicates as `List<T>` and you can chain
+queries to further filter query results.
+
+Results always reflect the current state of the Realm on the current thread,
+including during write transactions on the current thread. The one exception to
+this is when using `for...in` enumeration, which will always enumerate over the
+ objects which matched the query when the enumeration is begun, even if
+some of them are deleted or modified to be excluded by the filter during the
+enumeration.
+
+Results are initially lazily evaluated, and only run queries when the result
+of the query is requested. This means that chaining several temporary
+Results to sort and filter your data does not perform any extra work
+processing the intermediate state.
+
+Once the results have been evaluated or a notification block has been added,
+the results are eagerly kept up-to-date, with the work done to keep them
+up-to-date done on a background thread whenever possible.
 
 Results cannot be created directly.
 */
@@ -116,7 +137,7 @@ public final class Results<T: Object>: ResultsBase {
 
     - parameter predicate: The predicate to filter the objects.
 
-    - returns: The index of the given object, or `nil` if no objects match.
+    - returns: The index of the first matching object, or `nil` if no objects match.
     */
     public func indexOf(predicate: NSPredicate) -> Int? {
         return notFoundToNil(rlmResults.indexOfObjectWithPredicate(predicate))
@@ -128,10 +149,11 @@ public final class Results<T: Object>: ResultsBase {
 
     - parameter predicateFormat: The predicate format string which can accept variable arguments.
 
-    - returns: The index of the given object, or `nil` if no objects match.
+    - returns: The index of the first matching object, or `nil` if no objects match.
     */
     public func indexOf(predicateFormat: String, _ args: AnyObject...) -> Int? {
-        return notFoundToNil(rlmResults.indexOfObjectWithPredicate(NSPredicate(format: predicateFormat, argumentArray: args)))
+        return notFoundToNil(rlmResults.indexOfObjectWithPredicate(NSPredicate(format: predicateFormat,
+                                                                               argumentArray: args)))
     }
 
     // MARK: Object Retrieval
@@ -146,31 +168,44 @@ public final class Results<T: Object>: ResultsBase {
     public subscript(index: Int) -> T {
         get {
             throwForNegativeIndex(index)
-            return rlmResults[UInt(index)] as! T
+            return unsafeBitCast(rlmResults[UInt(index)], T.self)
         }
     }
 
     /// Returns the first object in the results, or `nil` if empty.
-    public var first: T? { return rlmResults.firstObject() as! T? }
+    public var first: T? { return unsafeBitCast(rlmResults.firstObject(), Optional<T>.self) }
 
     /// Returns the last object in the results, or `nil` if empty.
-    public var last: T? { return rlmResults.lastObject() as! T? }
+    public var last: T? { return unsafeBitCast(rlmResults.lastObject(), Optional<T>.self) }
 
     // MARK: KVC
 
     /**
-    Returns an Array containing the results of invoking `valueForKey:` using key on each of the collection's objects.
+    Returns an Array containing the results of invoking `valueForKey(_:)` using key on each of the collection's objects.
 
     - parameter key: The name of the property.
 
-    - returns: Array containing the results of invoking `valueForKey:` using key on each of the collection's objects.
+    - returns: Array containing the results of invoking `valueForKey(_:)` using key on each of the collection's objects.
     */
     public override func valueForKey(key: String) -> AnyObject? {
         return rlmResults.valueForKey(key)
     }
 
     /**
-    Invokes `setValue:forKey:` on each of the collection's objects using the specified value and key.
+     Returns an Array containing the results of invoking `valueForKeyPath(_:)` using keyPath on each of the
+     collection's objects.
+
+     - parameter keyPath: The key path to the property.
+
+     - returns: Array containing the results of invoking `valueForKeyPath(_:)` using keyPath on each of the
+     collection's objects.
+     */
+    public override func valueForKeyPath(keyPath: String) -> AnyObject? {
+        return rlmResults.valueForKeyPath(keyPath)
+    }
+
+    /**
+    Invokes `setValue(_:forKey:)` on each of the collection's objects using the specified value and key.
 
     - warning: This method can only be called during a write transaction.
 
@@ -283,6 +318,49 @@ public final class Results<T: Object>: ResultsBase {
     public func average<U: AddableType>(property: String) -> U? {
         return rlmResults.averageOfProperty(property) as! U?
     }
+
+    // MARK: Notifications
+
+    /**
+     Register a block to be called each time the Results changes.
+
+     The block will be asynchronously called with the initial results, and then
+     called again after each write transaction which causes the results to change.
+     You must retain the returned token for as long as you want the results to
+     continue to be sent to the block. To stop receiving updates, call stop() on the
+     token.
+
+     The determination for whether or not a write transaction has changed the
+     results is currently very coarse, and the block may be called even if no
+     changes occurred. The opposite (not being called despite changes) will not
+     happen. This will become more precise in future versions.
+
+     If an error occurs the block will be called with `nil` for the results
+     parameter and a non-`nil` error. Currently the only errors that can occur are
+     when opening the Realm on the background worker thread or the destination
+     queue fails.
+
+     At the time when the block is called, the Results object will be fully
+     evaluated and up-to-date, and as long as you do not perform a write transaction
+     on the same thread or explicitly call realm.refresh(), accessing it will never
+     perform blocking work.
+
+     - warning: This method cannot be called during a write transaction, or when
+                the source realm is read-only.
+
+     - parameter block: The block to be called with the evaluated results.
+     - returns: A token which must be held for as long as you want query results to be delivered.
+     */
+    @warn_unused_result(message="You must hold on to the NotificationToken returned from addNotificationBlock")
+    public func addNotificationBlock(block: (Results<T>?, NSError?) -> ()) -> NotificationToken {
+        return rlmResults.addNotificationBlock { results, error in
+            if results != nil {
+                block(self, nil)
+            } else {
+                block(nil, error)
+            }
+        }
+    }
 }
 
 extension Results: RealmCollectionType {
@@ -300,6 +378,19 @@ extension Results: RealmCollectionType {
     public var startIndex: Int { return 0 }
 
     /// The collection's "past the end" position.
-    /// endIndex is not a valid argument to subscript, and is always reachable from startIndex by zero or more applications of successor().
+    /// endIndex is not a valid argument to subscript, and is always reachable from startIndex by
+    /// zero or more applications of successor().
     public var endIndex: Int { return count }
+
+    /// :nodoc:
+    public func _addNotificationBlock(block: (AnyRealmCollection<T>?, NSError?) -> ()) -> NotificationToken {
+        let anyCollection = AnyRealmCollection(self)
+        return rlmResults.addNotificationBlock { results, error in
+            if results != nil {
+                block(anyCollection, nil)
+            } else {
+                block(nil, error)
+            }
+        }
+    }
 }

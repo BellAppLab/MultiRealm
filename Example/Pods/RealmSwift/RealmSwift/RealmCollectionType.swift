@@ -30,9 +30,8 @@ public final class RLMGenerator<T: Object>: GeneratorType {
         generatorBase = NSFastGenerator(collection)
     }
 
-    /// Advance to the next element and return it, or `nil` if no next element
-    /// exists.
-    public func next() -> T? {
+    /// Advance to the next element and return it, or `nil` if no next element exists.
+    public func next() -> T? { // swiftlint:disable:this valid_docs
         let accessor = generatorBase.next() as! T?
         if let accessor = accessor {
             RLMInitializeSwiftAccessorGenerics(accessor)
@@ -82,7 +81,7 @@ public protocol RealmCollectionType: CollectionType, CustomStringConvertible {
 
     - parameter predicate: The `NSPredicate` used to filter the objects.
 
-    - returns: The index of the given object, or `nil` if no objects match.
+    - returns: The index of the first matching object, or `nil` if no objects match.
     */
     func indexOf(predicate: NSPredicate) -> Int?
 
@@ -93,7 +92,7 @@ public protocol RealmCollectionType: CollectionType, CustomStringConvertible {
     - parameter predicateFormat: The predicate format string, optionally followed by a variable number
     of arguments.
 
-    - returns: The index of the given object, or `nil` if no objects match.
+    - returns: The index of the first matching object, or `nil` if no objects match.
     */
     func indexOf(predicateFormat: String, _ args: AnyObject...) -> Int?
 
@@ -150,7 +149,8 @@ public protocol RealmCollectionType: CollectionType, CustomStringConvertible {
 
     - parameter property: The name of a property conforming to `MinMaxType` to look for a minimum on.
 
-    - returns: The minimum value for the property amongst objects in the collection, or `nil` if the collection is empty.
+    - returns: The minimum value for the property amongst objects in the collection, or `nil` if the
+               collection is empty.
     */
     func min<U: MinMaxType>(property: String) -> U?
 
@@ -161,7 +161,8 @@ public protocol RealmCollectionType: CollectionType, CustomStringConvertible {
 
     - parameter property: The name of a property conforming to `MinMaxType` to look for a maximum on.
 
-    - returns: The maximum value for the property amongst objects in the collection, or `nil` if the collection is empty.
+    - returns: The maximum value for the property amongst objects in the collection, or `nil` if the
+               collection is empty.
     */
     func max<U: MinMaxType>(property: String) -> U?
 
@@ -183,7 +184,8 @@ public protocol RealmCollectionType: CollectionType, CustomStringConvertible {
 
     - parameter property: The name of a property conforming to `AddableType` to calculate average on.
 
-    - returns: The average of the given property over all objects in the collection, or `nil` if the collection is empty.
+    - returns: The average of the given property over all objects in the collection, or `nil` if the
+               collection is empty.
     */
     func average<U: AddableType>(property: String) -> U?
 
@@ -191,23 +193,39 @@ public protocol RealmCollectionType: CollectionType, CustomStringConvertible {
     // MARK: Key-Value Coding
 
     /**
-    Returns an Array containing the results of invoking `valueForKey:` using key on each of the collection's objects.
+    Returns an Array containing the results of invoking `valueForKey(_:)` using key on each of the collection's objects.
 
     - parameter key: The name of the property.
 
-    - returns: Array containing the results of invoking `valueForKey:` using key on each of the collection's objects.
+    - returns: Array containing the results of invoking `valueForKey(_:)` using key on each of the collection's objects.
     */
     func valueForKey(key: String) -> AnyObject?
 
     /**
-    Invokes `setValue:forKey:` on each of the collection's objects using the specified value and key.
+     Returns an Array containing the results of invoking `valueForKeyPath(_:)` using keyPath on each of the
+     collection's objects.
 
-    :warning: This method can only be called during a write transaction.
+     - parameter keyPath: The key path to the property.
+
+     - returns: Array containing the results of invoking `valueForKeyPath(_:)` using keyPath on each of the
+     collection's objects.
+     */
+    func valueForKeyPath(keyPath: String) -> AnyObject?
+
+    /**
+    Invokes `setValue(_:forKey:)` on each of the collection's objects using the specified value and key.
+
+    - warning: This method can only be called during a write transaction.
 
     - parameter value: The object value.
     - parameter key:   The name of the property.
     */
     func setValue(value: AnyObject?, forKey key: String)
+
+    // MARK: Notifications
+
+    /// :nodoc:
+    func _addNotificationBlock(block: (AnyRealmCollection<Element>?, NSError?) -> ()) -> NotificationToken
 }
 
 private class _AnyRealmCollectionBase<T: Object>: RealmCollectionType {
@@ -221,7 +239,9 @@ private class _AnyRealmCollectionBase<T: Object>: RealmCollectionType {
     func filter(predicateFormat: String, _ args: AnyObject...) -> Results<Element> { fatalError() }
     func filter(predicate: NSPredicate) -> Results<Element> { fatalError() }
     func sorted(property: String, ascending: Bool) -> Results<Element> { fatalError() }
-    func sorted<S: SequenceType where S.Generator.Element == SortDescriptor>(sortDescriptors: S) -> Results<Element> { fatalError() }
+    func sorted<S: SequenceType where S.Generator.Element == SortDescriptor>(sortDescriptors: S) -> Results<Element> {
+        fatalError()
+    }
     func min<U: MinMaxType>(property: String) -> U? { fatalError() }
     func max<U: MinMaxType>(property: String) -> U? { fatalError() }
     func sum<U: AddableType>(property: String) -> U { fatalError() }
@@ -231,7 +251,11 @@ private class _AnyRealmCollectionBase<T: Object>: RealmCollectionType {
     var startIndex: Int { fatalError() }
     var endIndex: Int { fatalError() }
     func valueForKey(key: String) -> AnyObject? { fatalError() }
+    func valueForKeyPath(keyPath: String) -> AnyObject? { fatalError() }
     func setValue(value: AnyObject?, forKey key: String) { fatalError() }
+    func _addNotificationBlock(block: (AnyRealmCollection<Element>?, NSError?) -> ()) -> NotificationToken {
+        fatalError()
+    }
 }
 
 private final class _AnyRealmCollection<C: RealmCollectionType>: _AnyRealmCollectionBase<C.Element> {
@@ -271,7 +295,7 @@ private final class _AnyRealmCollection<C: RealmCollectionType>: _AnyRealmCollec
 
     - parameter predicate: The `NSPredicate` used to filter the objects.
 
-    - returns: The index of the given object, or `nil` if no objects match.
+    - returns: The index of the first matching object, or `nil` if no objects match.
     */
     override func indexOf(predicate: NSPredicate) -> Int? { return base.indexOf(predicate) }
 
@@ -282,9 +306,11 @@ private final class _AnyRealmCollection<C: RealmCollectionType>: _AnyRealmCollec
     - parameter predicateFormat: The predicate format string, optionally followed by a variable number
     of arguments.
 
-    - returns: The index of the given object, or `nil` if no objects match.
+    - returns: The index of the first matching object, or `nil` if no objects match.
     */
-    override func indexOf(predicateFormat: String, _ args: AnyObject...) -> Int? { return base.indexOf(NSPredicate(format: predicateFormat, argumentArray: args)) }
+    override func indexOf(predicateFormat: String, _ args: AnyObject...) -> Int? {
+        return base.indexOf(NSPredicate(format: predicateFormat, argumentArray: args))
+    }
 
     // MARK: Filtering
 
@@ -295,7 +321,9 @@ private final class _AnyRealmCollection<C: RealmCollectionType>: _AnyRealmCollec
 
     - returns: `Results` containing collection elements that match the given predicate.
     */
-    override func filter(predicateFormat: String, _ args: AnyObject...) -> Results<C.Element> { return base.filter(NSPredicate(format: predicateFormat, argumentArray: args)) }
+    override func filter(predicateFormat: String, _ args: AnyObject...) -> Results<C.Element> {
+        return base.filter(NSPredicate(format: predicateFormat, argumentArray: args))
+    }
 
     /**
     Returns `Results` containing collection elements that match the given predicate.
@@ -317,7 +345,9 @@ private final class _AnyRealmCollection<C: RealmCollectionType>: _AnyRealmCollec
 
     - returns: `Results` containing collection elements sorted by the given property.
     */
-    override func sorted(property: String, ascending: Bool) -> Results<C.Element> { return base.sorted(property, ascending: ascending) }
+    override func sorted(property: String, ascending: Bool) -> Results<C.Element> {
+        return base.sorted(property, ascending: ascending)
+    }
 
     /**
     Returns `Results` with elements sorted by the given sort descriptors.
@@ -326,7 +356,10 @@ private final class _AnyRealmCollection<C: RealmCollectionType>: _AnyRealmCollec
 
     - returns: `Results` with elements sorted by the given sort descriptors.
     */
-    override func sorted<S: SequenceType where S.Generator.Element == SortDescriptor>(sortDescriptors: S) -> Results<C.Element> { return base.sorted(sortDescriptors) }
+    override func sorted<S: SequenceType where S.Generator.Element == SortDescriptor>
+                        (sortDescriptors: S) -> Results<C.Element> {
+        return base.sorted(sortDescriptors)
+    }
 
 
     // MARK: Aggregate Operations
@@ -338,7 +371,8 @@ private final class _AnyRealmCollection<C: RealmCollectionType>: _AnyRealmCollec
 
     - parameter property: The name of a property conforming to `MinMaxType` to look for a minimum on.
 
-    - returns: The minimum value for the property amongst objects in the collection, or `nil` if the collection is empty.
+    - returns: The minimum value for the property amongst objects in the collection, or `nil` if the
+               collection is empty.
     */
     override func min<U: MinMaxType>(property: String) -> U? { return base.min(property) }
 
@@ -349,7 +383,8 @@ private final class _AnyRealmCollection<C: RealmCollectionType>: _AnyRealmCollec
 
     - parameter property: The name of a property conforming to `MinMaxType` to look for a maximum on.
 
-    - returns: The maximum value for the property amongst objects in the collection, or `nil` if the collection is empty.
+    - returns: The maximum value for the property amongst objects in the collection, or `nil` if the
+               collection is empty.
     */
     override func max<U: MinMaxType>(property: String) -> U? { return base.max(property) }
 
@@ -371,7 +406,8 @@ private final class _AnyRealmCollection<C: RealmCollectionType>: _AnyRealmCollec
 
     - parameter property: The name of a property conforming to `AddableType` to calculate average on.
 
-    - returns: The average of the given property over all objects in the collection, or `nil` if the collection is empty.
+    - returns: The average of the given property over all objects in the collection, or `nil` if the
+               collection is empty.
     */
     override func average<U: AddableType>(property: String) -> U? { return base.average(property) }
 
@@ -385,43 +421,74 @@ private final class _AnyRealmCollection<C: RealmCollectionType>: _AnyRealmCollec
 
     - returns: The object at the given `index`.
     */
-    override subscript(index: Int) -> C.Element { return unsafeBitCast(base[index as! C.Index], C.Element.self) } // FIXME: it should be possible to avoid this force-casting
+    override subscript(index: Int) -> C.Element {
+        // FIXME: it should be possible to avoid this force-casting
+        return unsafeBitCast(base[index as! C.Index], C.Element.self)
+    }
 
     /// Returns a `GeneratorOf<Element>` that yields successive elements in the collection.
-    override func generate() -> RLMGenerator<Element> { return base.generate() as! RLMGenerator<Element> } // FIXME: it should be possible to avoid this force-casting
+    override func generate() -> RLMGenerator<Element> {
+        // FIXME: it should be possible to avoid this force-casting
+        return base.generate() as! RLMGenerator<Element>
+    }
 
 
     // MARK: Collection Support
 
     /// The position of the first element in a non-empty collection.
     /// Identical to endIndex in an empty collection.
-    override var startIndex: Int { return base.startIndex as! Int } // FIXME: it should be possible to avoid this force-casting
+    override var startIndex: Int {
+        // FIXME: it should be possible to avoid this force-casting
+        return base.startIndex as! Int
+    }
 
     /// The collection's "past the end" position.
-    /// endIndex is not a valid argument to subscript, and is always reachable from startIndex by zero or more applications of successor().
-    override var endIndex: Int { return base.endIndex as! Int } // FIXME: it should be possible to avoid this force-casting
+    /// endIndex is not a valid argument to subscript, and is always reachable from startIndex by
+    /// zero or more applications of successor().
+    override var endIndex: Int {
+        // FIXME: it should be possible to avoid this force-casting
+        return base.endIndex as! Int
+    }
 
 
     // MARK: Key-Value Coding
 
     /**
-    Returns an Array containing the results of invoking `valueForKey:` using key on each of the collection's objects.
+    Returns an Array containing the results of invoking `valueForKey(_:)` using key on each of the collection's objects.
 
     - parameter key: The name of the property.
 
-    - returns: Array containing the results of invoking `valueForKey:` using key on each of the collection's objects.
+    - returns: Array containing the results of invoking `valueForKey(_:)` using key on each of the collection's objects.
     */
     override func valueForKey(key: String) -> AnyObject? { return base.valueForKey(key) }
 
     /**
-    Invokes `setValue:forKey:` on each of the collection's objects using the specified value and key.
+     Returns an Array containing the results of invoking `valueForKeyPath(_:)` using keyPath on each of the
+     collection's objects.
 
-    :warning: This method can only be called during a write transaction.
+     - parameter keyPath: The key path to the property.
+
+     - returns: Array containing the results of invoking `valueForKeyPath(_:)` using keyPath on each of the
+       collection's objects.
+     */
+    override func valueForKeyPath(keyPath: String) -> AnyObject? { return base.valueForKeyPath(keyPath) }
+
+    /**
+    Invokes `setValue(_:forKey:)` on each of the collection's objects using the specified value and key.
+
+    - warning: This method can only be called during a write transaction.
 
     - parameter value: The object value.
     - parameter key:   The name of the property.
     */
     override func setValue(value: AnyObject?, forKey key: String) { base.setValue(value, forKey: key) }
+
+    // MARK: Notifications
+
+    /// :nodoc:
+    override func _addNotificationBlock(block: (AnyRealmCollection<Element>?, NSError?) -> ()) -> NotificationToken {
+        return base._addNotificationBlock(block)
+    }
 }
 
 /**
@@ -472,7 +539,7 @@ public final class AnyRealmCollection<T: Object>: RealmCollectionType {
 
     - parameter predicate: The `NSPredicate` used to filter the objects.
 
-    - returns: The index of the given object, or `nil` if no objects match.
+    - returns: The index of the first matching object, or `nil` if no objects match.
     */
     public func indexOf(predicate: NSPredicate) -> Int? { return base.indexOf(predicate) }
 
@@ -483,9 +550,11 @@ public final class AnyRealmCollection<T: Object>: RealmCollectionType {
     - parameter predicateFormat: The predicate format string, optionally followed by a variable number
     of arguments.
 
-    - returns: The index of the given object, or `nil` if no objects match.
+    - returns: The index of the first matching object, or `nil` if no objects match.
     */
-    public func indexOf(predicateFormat: String, _ args: AnyObject...) -> Int? { return base.indexOf(NSPredicate(format: predicateFormat, argumentArray: args)) }
+    public func indexOf(predicateFormat: String, _ args: AnyObject...) -> Int? {
+        return base.indexOf(NSPredicate(format: predicateFormat, argumentArray: args))
+    }
 
     // MARK: Filtering
 
@@ -496,7 +565,9 @@ public final class AnyRealmCollection<T: Object>: RealmCollectionType {
 
     - returns: `Results` containing collection elements that match the given predicate.
     */
-    public func filter(predicateFormat: String, _ args: AnyObject...) -> Results<Element> { return base.filter(NSPredicate(format: predicateFormat, argumentArray: args)) }
+    public func filter(predicateFormat: String, _ args: AnyObject...) -> Results<Element> {
+        return base.filter(NSPredicate(format: predicateFormat, argumentArray: args))
+    }
 
     /**
     Returns `Results` containing collection elements that match the given predicate.
@@ -518,7 +589,9 @@ public final class AnyRealmCollection<T: Object>: RealmCollectionType {
 
     - returns: `Results` containing collection elements sorted by the given property.
     */
-    public func sorted(property: String, ascending: Bool) -> Results<Element> { return base.sorted(property, ascending: ascending) }
+    public func sorted(property: String, ascending: Bool) -> Results<Element> {
+        return base.sorted(property, ascending: ascending)
+    }
 
     /**
     Returns `Results` with elements sorted by the given sort descriptors.
@@ -527,7 +600,10 @@ public final class AnyRealmCollection<T: Object>: RealmCollectionType {
 
     - returns: `Results` with elements sorted by the given sort descriptors.
     */
-    public func sorted<S: SequenceType where S.Generator.Element == SortDescriptor>(sortDescriptors: S) -> Results<Element> { return base.sorted(sortDescriptors) }
+    public func sorted<S: SequenceType where S.Generator.Element == SortDescriptor>
+                      (sortDescriptors: S) -> Results<Element> {
+        return base.sorted(sortDescriptors)
+    }
 
 
     // MARK: Aggregate Operations
@@ -539,7 +615,8 @@ public final class AnyRealmCollection<T: Object>: RealmCollectionType {
 
     - parameter property: The name of a property conforming to `MinMaxType` to look for a minimum on.
 
-    - returns: The minimum value for the property amongst objects in the collection, or `nil` if the collection is empty.
+    - returns: The minimum value for the property amongst objects in the collection, or `nil` if the
+               collection is empty.
     */
     public func min<U: MinMaxType>(property: String) -> U? { return base.min(property) }
 
@@ -550,7 +627,8 @@ public final class AnyRealmCollection<T: Object>: RealmCollectionType {
 
     - parameter property: The name of a property conforming to `MinMaxType` to look for a maximum on.
 
-    - returns: The maximum value for the property amongst objects in the collection, or `nil` if the collection is empty.
+    - returns: The maximum value for the property amongst objects in the collection, or `nil` if the
+               collection is empty.
     */
     public func max<U: MinMaxType>(property: String) -> U? { return base.max(property) }
 
@@ -572,7 +650,8 @@ public final class AnyRealmCollection<T: Object>: RealmCollectionType {
 
     - parameter property: The name of a property conforming to `AddableType` to calculate average on.
 
-    - returns: The average of the given property over all objects in the collection, or `nil` if the collection is empty.
+    - returns: The average of the given property over all objects in the collection, or `nil` if the
+               collection is empty.
     */
     public func average<U: AddableType>(property: String) -> U? { return base.average(property) }
 
@@ -599,28 +678,64 @@ public final class AnyRealmCollection<T: Object>: RealmCollectionType {
     public var startIndex: Int { return base.startIndex }
 
     /// The collection's "past the end" position.
-    /// endIndex is not a valid argument to subscript, and is always reachable from startIndex by zero or more applications of successor().
+    /// endIndex is not a valid argument to subscript, and is always reachable from startIndex by
+    /// zero or more applications of successor().
     public var endIndex: Int { return base.endIndex }
 
 
     // MARK: Key-Value Coding
 
     /**
-    Returns an Array containing the results of invoking `valueForKey:` using key on each of the collection's objects.
+    Returns an Array containing the results of invoking `valueForKey(_:)` using key on each of the collection's objects.
 
     - parameter key: The name of the property.
 
-    - returns: Array containing the results of invoking `valueForKey:` using key on each of the collection's objects.
+    - returns: Array containing the results of invoking `valueForKey(_:)` using key on each of the collection's objects.
     */
     public func valueForKey(key: String) -> AnyObject? { return base.valueForKey(key) }
 
     /**
-    Invokes `setValue:forKey:` on each of the collection's objects using the specified value and key.
+     Returns an Array containing the results of invoking `valueForKeyPath(_:)` using keyPath on each of the
+     collection's objects.
 
-    :warning: This method can only be called during a write transaction.
+     - parameter keyPath: The key path to the property.
+
+     - returns: Array containing the results of invoking `valueForKeyPath(_:)` using keyPath on each of the
+     collection's objects.
+     */
+    public func valueForKeyPath(keyPath: String) -> AnyObject? { return base.valueForKeyPath(keyPath) }
+
+    /**
+    Invokes `setValue(_:forKey:)` on each of the collection's objects using the specified value and key.
+
+    - warning: This method can only be called during a write transaction.
 
     - parameter value: The object value.
     - parameter key:   The name of the property.
     */
     public func setValue(value: AnyObject?, forKey key: String) { base.setValue(value, forKey: key) }
+
+    // MARK: Notifications
+
+    /**
+    Register a block to be called each time the collection changes.
+
+    The block will be asynchronously called with the initial collection, and
+    then called again after each write transaction which changes the collection
+    or any of the items in the collection. You must retain the returned token for
+    as long as you want updates to continue to be sent to the block. To stop
+    receiving updates, call stop() on the token.
+
+    - parameter block: The block to be called each time the collection changes.
+    - returns: A token which must be held for as long as you want notifications to be delivered.
+    */
+    @warn_unused_result(message="You must hold on to the NotificationToken returned from addNotificationBlock")
+    public func addNotificationBlock(block: (AnyRealmCollection<Element>?, NSError?) -> ()) -> NotificationToken {
+        return base._addNotificationBlock(block)
+    }
+
+    /// :nodoc:
+    public func _addNotificationBlock(block: (AnyRealmCollection<Element>?, NSError?) -> ()) -> NotificationToken {
+        return base._addNotificationBlock(block)
+    }
 }
