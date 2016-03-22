@@ -1,5 +1,5 @@
 PODS:
-  - MultiRealm (0.4.0):
+  - MultiRealm (0.4.1):
     - RealmSwift
   - Realm (0.98.5):
     - Realm/Headers (= 0.98.5)
@@ -15,7 +15,7 @@ EXTERNAL SOURCES:
     :path: ../
 
 SPEC CHECKSUMS:
-  MultiRealm: 6f30d268f29f5f7ef751d6a48a9fabc3e6941fee
+  MultiRealm: cc9b0d655ed25390385366f215e5464011c02bfa
   Realm: db08379969e45cea2edd1c3c0a090fe9e22d2d2f
   RealmSwift: cb11ad1c35e15dc982f2dbf5afe2a3124193a358
 

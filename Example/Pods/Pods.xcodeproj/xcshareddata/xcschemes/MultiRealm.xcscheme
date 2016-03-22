@@ -14,7 +14,7 @@
             buildForArchiving = "YES">
             <BuildableReference
                BuildableIdentifier = 'primary'
-               BlueprintIdentifier = 'A2033A980B2C2B66A8EE1A93'
+               BlueprintIdentifier = 'D4DEA1457A29783464DB3EBA'
                BlueprintName = 'MultiRealm'
                ReferencedContainer = 'container:Pods.xcodeproj'
                BuildableName = 'MultiRealm.framework'>
