@@ -56,7 +56,7 @@ public struct MultiRealm
     public typealias CreationBlock = () -> Void
     
     //MARK: Variables
-    private(set) var realm: Realm!
+    public private(set) var realm: Realm!
     public let queue: dispatch_queue_t
     
     //MARK: Setup

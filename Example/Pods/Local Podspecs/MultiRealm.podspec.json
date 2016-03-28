@@ -1,6 +1,6 @@
 {
   "name": "MultiRealm",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "summary": "Making it easier to work with Realm on the background.",
   "homepage": "https://github.com/BellAppLab/MultiRealm",
   "license": "MIT",
@@ -9,7 +9,7 @@
   },
   "source": {
     "git": "https://github.com/BellAppLab/MultiRealm.git",
-    "tag": "0.4.1"
+    "tag": "0.5.0"
   },
   "social_media_url": "https://twitter.com/BellAppLab",
   "platforms": {
