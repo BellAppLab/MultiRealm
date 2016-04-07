@@ -84,11 +84,13 @@ strip_invalid_archs() {
 
 
 if [[ "$CONFIGURATION" == "Debug" ]]; then
+  install_framework "Pods-MultiRealm_Tests/BLFixedThreadOperations.framework"
   install_framework "Pods-MultiRealm_Tests/MultiRealm.framework"
   install_framework "Pods-MultiRealm_Tests/Realm.framework"
   install_framework "Pods-MultiRealm_Tests/RealmSwift.framework"
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
+  install_framework "Pods-MultiRealm_Tests/BLFixedThreadOperations.framework"
   install_framework "Pods-MultiRealm_Tests/MultiRealm.framework"
   install_framework "Pods-MultiRealm_Tests/Realm.framework"
   install_framework "Pods-MultiRealm_Tests/RealmSwift.framework"

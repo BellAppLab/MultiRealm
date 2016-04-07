@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = "MultiRealm"
-  s.version          = "0.5.0"
+  s.version          = "0.5.1"
   s.summary          = "Making it easier to work with Realm on the background."
   s.homepage         = "https://github.com/BellAppLab/MultiRealm"
   s.license          = 'MIT'
@@ -17,4 +17,5 @@ Pod::Spec.new do |s|
 
   s.frameworks = 'Foundation'
   s.dependency 'RealmSwift'
+  s.dependency 'BLFixedThreadOperations'
 end

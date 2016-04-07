@@ -1,4 +1,5 @@
 import RealmSwift
+import BLFixedThreadOperations
 
 
 //MARK: - Handling background tasks in iOS
@@ -44,29 +45,30 @@ public struct MultiRealm
     public enum Queue
     {
         case Main, Background
-        
-        internal var queue: dispatch_queue_t {
-            switch self
-            {
-            case .Main: return dispatch_get_main_queue()
-            case .Background: return dispatch_queue_create("MultiRealmQueue", nil)
-            }
-        }
     }
-    public typealias CreationBlock = () -> Void
+    public typealias CreationBlock = () -> Realm
     
     //MARK: Variables
     public private(set) var realm: Realm!
-    public let queue: dispatch_queue_t
+    public let queueType: Queue
+    public let fixedThreadOpeationQueue: BLFixedThreadOperationQueue?
     
     //MARK: Setup
     public init(_ queueType: Queue, _ creationBlock: CreationBlock)
     {
-        self.queue = queueType.queue
-        self.performBlock(creationBlock)
+        self.queueType = queueType
+        switch self.queueType {
+        case .Background:
+            self.fixedThreadOpeationQueue = BLFixedThreadOperationQueue()
+        default:
+            self.fixedThreadOpeationQueue = nil
+        }
+        self.performBlock { 
+            self.realm = creationBlock()
+        }
     }
     
-    public mutating func set(realm: Realm)
+    private mutating func set(realm: Realm)
     {
         self.realm = realm
     }
@@ -80,6 +82,11 @@ public struct MultiRealm
             endBackgroundTask(bgTaskId)
         }
         
-        dispatch_async(self.queue, finalBlock)
+        if let queue = self.fixedThreadOpeationQueue {
+            queue.addOperationWithBlock(finalBlock)
+            return
+        }
+        
+        dispatch_async(dispatch_get_main_queue(), finalBlock)
     }
 }

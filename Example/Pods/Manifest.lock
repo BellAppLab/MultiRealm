@@ -1,5 +1,7 @@
 PODS:
-  - MultiRealm (0.5.0):
+  - BLFixedThreadOperations (0.1.1)
+  - MultiRealm (0.5.1):
+    - BLFixedThreadOperations
     - RealmSwift
   - Realm (0.98.6):
     - Realm/Headers (= 0.98.6)
@@ -12,10 +14,11 @@ DEPENDENCIES:
 
 EXTERNAL SOURCES:
   MultiRealm:
-    :path: ../
+    :path: "../"
 
 SPEC CHECKSUMS:
-  MultiRealm: 41f46bbdd4b61ca4e76bb51e5dd32a77e14a113e
+  BLFixedThreadOperations: 9f0782d87be4e4f590ba32a8807dc1e3e804aa84
+  MultiRealm: 9956789e3ab48f3de480f23bef9f05ba0bfafb15
   Realm: 44803f35418c5d89b27825a564247fcd190de37e
   RealmSwift: c7239c52c83f8c43525a5269ba7be1694da33afc
 
