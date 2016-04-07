@@ -1,6 +1,7 @@
 import UIKit
 import XCTest
 import MultiRealm
+import RealmSwift
 
 class Tests: XCTestCase {
     
@@ -14,20 +15,19 @@ class Tests: XCTestCase {
         super.tearDown()
     }
     
-    func testExample() {
+    func testCreation() {
         // This is an example of a functional test case.
-        XCTAssert(true, "Pass")
-        
-        let multiRealm = MultiRealm(.Background) {
-            let realm = try! Realm()
-            multiRealm.set(realm)
-        }
-    }
-    
-    func testPerformanceExample() {
-        // This is an example of a performance test case.
-        self.measureBlock() {
-            // Put the code you want to measure the time of here.
+        _ = MultiRealm(.Background) {
+            var realm: Realm?
+            do {
+                realm = try Realm()
+                XCTAssert(realm != nil, "Realm created successfully!")
+                return realm
+            } catch {
+                print(error)
+                XCTFail()
+                return nil
+            }
         }
     }
     

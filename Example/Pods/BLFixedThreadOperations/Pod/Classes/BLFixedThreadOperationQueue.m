@@ -74,13 +74,15 @@
     NSOperation *operation = [_allOperations objectAtIndex:0];
     [_allOperations removeObjectAtIndex:0];
     if (operation.isCancelled) {
-        [self.underlyingThread start];
+        [self processOperations];
         return;
     }
     
     __weak typeof(self)weakSelf = self;
+    void(^completionBlock)() = operation.completionBlock;
     [operation setCompletionBlock:^{
-        [[weakSelf underlyingThread] start];
+        if (completionBlock) completionBlock();
+        [weakSelf processOperations];
     }];
     [operation start];
 }

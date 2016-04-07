@@ -46,7 +46,7 @@ public struct MultiRealm
     {
         case Main, Background
     }
-    public typealias CreationBlock = () -> Realm
+    public typealias CreationBlock = () -> Realm?
     
     //MARK: Variables
     public private(set) var realm: Realm!
@@ -60,6 +60,7 @@ public struct MultiRealm
         switch self.queueType {
         case .Background:
             self.fixedThreadOpeationQueue = BLFixedThreadOperationQueue()
+            self.fixedThreadOpeationQueue?.name = "com.bellapplab.MultiRealmThread"
         default:
             self.fixedThreadOpeationQueue = nil
         }

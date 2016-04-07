@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = "MultiRealm"
-  s.version          = "0.5.1"
+  s.version          = "0.5.2"
   s.summary          = "Making it easier to work with Realm on the background."
   s.homepage         = "https://github.com/BellAppLab/MultiRealm"
   s.license          = 'MIT'
