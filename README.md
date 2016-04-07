@@ -10,15 +10,20 @@
 Instead of this:
 
 ```swift
+import RealmSwift
+
 let realm = try! Realm()
 ```
 
 **Do this:**
 
 ```swift
+import MultiRealm
+import RealmSwift
+
 let multiRealm = MultiRealm(.Background) {
     let realm = try! Realm()
-    multiRealm.set(realm)
+    return realm
 }
 ```
 
@@ -35,11 +40,13 @@ To run the example project, clone the repo, and run `pod install` from the Examp
 
 ## Requirements
 
-iOS 8+
-OSX 10.10+
-RealmSwift
+- iOS 8+
+- OSX 10.10+
+- RealmSwift
 
 ## Installation
+
+### CocoaPods
 
 MultiRealm is available through [CocoaPods](http://cocoapods.org). To install
 it, simply add the following line to your Podfile:
